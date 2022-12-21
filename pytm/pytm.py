@@ -409,6 +409,8 @@ def _apply_defaults(flows, data):
                 e.data.add(d)
 
     for e in flows:
+        print(e.source)
+        
         if e.source.data:
             try:
                 setattr(e, "data", e.source.data.copy())
@@ -1051,7 +1053,8 @@ a brief description of the system being modeled."""
             with open(this_tmppath, "w") as f:
                 f.write( self.seq() )
             os.chdir(self.toolpath)
-            cmd_ = "java -jar .\plantuml.jar -tpng -o ../cache/ {}".format(this_tmppath)
+            #https://github.com/plantuml/plantuml/issues/135
+            cmd_ = "java -jar .\plantuml.jar -DPLANTUML_LIMIT_SIZE=8192 -tpng -o ../cache/ {}".format(this_tmppath)
             print(cmd_)
             os.system(cmd_)
             os.chdir(self.project_path)
@@ -1384,7 +1387,9 @@ a custom response, CVSS score or override other attributes.""",
         return self.name
 
     def _label(self):
-        return "\\n".join(wrap(self.display_name(), 18))
+        # djerryz modify here
+        #return "\\n".join(wrap(self.display_name(), 18))
+        return "".join(wrap(self.display_name(), 18))
 
     def _shape(self):
         return "square"

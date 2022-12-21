@@ -21,14 +21,16 @@
 
 thanks to project @pytm
 
-增强功能列表:
+**增强功能列表:**
 
+* **扩展json定义模型，实现几乎0编程完成模型构建**
 * 扩展支持windows
 * 自带依赖工具
   * https://github.com/plantuml/plantuml/releases/tag/v1.2022.14
-  * https://graphviz.gitlab.io/download/
+  * https://graphviz.gitlab.io/download/ （不要删减内容，会报错~）
 * 扩展支持一次性生成
 * 扩展中文支持， 修改_dfd_template下fontnam，从Arial到FangSong
+* 扩展seq size
 
 TODO:
 * 生成静态图
@@ -37,9 +39,142 @@ TODO:
 
 
 
+## 三、使用案例 - 需求名称: WEB站点上用户评论功能
 
-## 三、使用案例
-### 需求名称: WEB站点上用户评论功能
+### 1. JSON定义模型(推荐)
+
+只需定义出类似如下的json数据结构即可描述需求设计涉及的实体，边界与数据流：
+
+```json
+this_ = {
+    "base":{
+        "title":"WEB站点上用户评论功能",
+        "desc": "这是一个非常简单的系统的威胁模型示例 - 基于网络的评论系统。用户输入评论，这些评论被添加到数据库并显示给用户。人们的想法是，尽管很简单，但这是一个足以表达有意义威胁的完整例子。"
+    },
+    "boundarys": {
+        "b_Internet":{
+
+        },
+        "b_Server/DB":{
+
+        },
+        "b_Server/WEB":{
+
+        },
+        "b_AWS VPC":{
+
+        }
+    },
+    "elements":{
+        "e_用户":{
+            "roler": "Actor",
+            "in": "b_Internet"
+        },
+        "e_Web服务器":{
+            "roler": "Server",
+            "in": "b_Server/WEB"
+        },
+        "e_SQL数据库":{
+            "roler": "Datastore",
+            "in": "b_Server/DB"
+        },
+        "e_真实身份数据库":{
+            "roler": "Datastore",
+            "in": "b_Server/DB"
+        },
+        "e_AWS功能区":{
+            "roler": "Lambda",
+            "in": "b_AWS VPC"
+        }
+    },
+    "dataflows": {
+        "1": {
+            "flowto": ["e_SQL数据库","e_真实身份数据库","f_数据库验证用户真实身份"],
+            "flowdesc": {
+                "protocol": "RDA-TCP",
+                "dstPort": 40234,
+                "data": [
+                    "d_验证用户身份的令牌", 
+                    "SECRET"
+                ],
+                "note": """验证用户是否是他们所说的用户。""",
+                "maxClassification": "SECRET"
+            }
+        },
+        "2": {
+            "flowto": ["e_用户","e_Web服务器","f_用户输入评论 (*)"],
+            "flowdesc": {
+                "protocol": "HTTP",
+                "dstPort": 80,
+                "data": [
+                    "d_在HTML或Markdown中的用户评论数据", 
+                    "PUBLIC"
+                ],
+                "note": """这是一个存储和检索用户评论的简单web应用程序。""",
+                "maxClassification": "PUBLIC"
+            }
+        },
+        "3": {
+            "flowto": ["e_Web服务器","e_SQL数据库","f_包含用户评论数据的Insert查询指令"],
+            "flowdesc": {
+                "protocol": "MySQL",
+                "dstPort": 3306,
+                "data": [
+                    "d_包含用户评论数据的Insert查询指令", 
+                    "PUBLIC"
+                ],
+                "note": """Web服务器在其SQL查询中插入用户注释，并将其存储在数据库中。""",
+                "maxClassification": "PUBLIC"
+            }
+        },
+        "4": {
+            "flowto": ["e_SQL数据库","e_Web服务器","f_检索评论"],
+            "flowdesc": {
+                "protocol": "MySQL",
+                "dstPort": 80,
+                "data": [
+                    "d_Web服务器从DB检索评论", 
+                    "PUBLIC"
+                ],
+                "note": """这是一个存储和检索用户评论的简单web应用程序。""",
+                "maxClassification": "PUBLIC"
+            }
+        },
+        "5": {
+            "flowto": ["e_Web服务器","e_用户","f_展示评论 (*)"],
+            "flowdesc": {
+                "protocol": "HTTP",
+                "dstPort": -1,
+                "data": [
+                    "d_Web服务器向最终用户显示评论", 
+                    "PUBLIC"
+                ],
+                "note": """""",
+                "maxClassification": "PUBLIC"
+            }
+        },
+        "6": {
+            "flowto": ["e_AWS功能区","e_SQL数据库","f_Serverless功能定期清理数据库"],
+            "flowdesc": {
+                "protocol": "MySQL",
+                "dstPort": 3306,
+                "data": [
+                    "d_Serverless功能清除数据库", 
+                    "PUBLIC"
+                ],
+                "note": """""",
+                "maxClassification": "PUBLIC"
+            }
+        },
+
+    }
+}
+```
+
+详情参考example/json/web_user_comment_json.py
+
+### 2. 编程定义模型(可选)
+
 1. 定义全景
 ```python
 tm = TM("WEB站点上用户评论功能")
@@ -173,7 +308,7 @@ my_lambda_to_db.data = clear_op
     py -3 web_user_comment.py --seq # cache目录下的tmp_seq.png即为时序图
     ```
 
-    ![](./example/web_user_comment_seq.png)
+    ![](./example/raw/web_user_comment_seq.png)
 
   * 威胁建模图
 
@@ -181,7 +316,7 @@ my_lambda_to_db.data = clear_op
     py -3 web_user_comment.py --dfd # cache目录下的tmp_dfd.png即为建模图
     ```
 
-    ![](./example/web_user_comment_dfd.png)
+    ![](./example/raw/web_user_comment_dfd.png)
 
   * 报告
 
@@ -189,7 +324,7 @@ my_lambda_to_db.data = clear_op
     py -3 web_user_comment.py --report ../docs/basic_template_cn.md # cache目录下的tmp_report.md即为报告
     ```
 
-    ![](./example/web_user_comment_report.png)
+    ![](./example/raw/web_user_comment_report.png)
 
 6. 补充威胁项
 
@@ -201,3 +336,6 @@ my_lambda_to_db.data = clear_op
    * 确认威胁存在情况与消减措施
 
 8. 代码审计确认威胁消减
+
+
+
