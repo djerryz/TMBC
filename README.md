@@ -41,7 +41,9 @@ TODO:
 
 ## 三、使用案例 - 需求名称: WEB站点上用户评论功能
 
-### 1. JSON定义模型(推荐)
+### 1. 生成代码文件
+
+#### 1.1 JSON定义模型(推荐)
 
 只需定义出类似如下的json数据结构即可描述需求设计涉及的实体，边界与数据流：
 
@@ -173,7 +175,7 @@ this_ = {
 
 详情参考example/json/web_user_comment_json.py
 
-### 2. 编程定义模型(可选)
+#### 1.2. 编程定义模型(可选)
 
 1. 定义全景
 ```python
@@ -299,12 +301,19 @@ my_lambda_to_db.dstPort = 3306
 my_lambda_to_db.data = clear_op
 ```
 
-5. 生成结果
+详情参考example/raw/web_user_comment.py
+
+### 2. 生成结果
 
   * 时序图
 
     ```
-    cd example
+    # json定义模型参考命令 --后面依次类推不再展开
+    cd example/json
+    py -3 new_web_user_comment_json_model.py --seq
+    
+    # 代码定义模型参考命令
+    cd example/raw
     py -3 web_user_comment.py --seq # cache目录下的tmp_seq.png即为时序图
     ```
 
@@ -326,16 +335,19 @@ my_lambda_to_db.data = clear_op
 
     ![](./example/raw/web_user_comment_report.png)
 
-6. 补充威胁项
+### 3. 建模的后利用
 
-   项目中自带的为通用常见的威胁，基于STRIDE,CIA等技巧或者基于实际的业务常见再对威胁进行拓展识别与补充
+* 补充威胁项
 
-7. 组织评审会议
+​		项目中自带的为通用常见的威胁，基于STRIDE,CIA等技巧或者基于实际的业务常见再对威胁进行拓展识别与补充
 
-   * 确认威胁等级
-   * 确认威胁存在情况与消减措施
+* 组织评审会议
 
-8. 代码审计确认威胁消减
+  * 确认威胁等级
+
+  * 确认威胁存在情况与消减措施
+
+* 代码审计确认威胁消减
 
 
 
